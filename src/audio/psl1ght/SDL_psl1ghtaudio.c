@@ -32,14 +32,26 @@
 #include "../SDL_audio_c.h"
 #include "SDL_psl1ghtaudio.h"
 
+#include <stdio.h> // For FILE operations
+#include <stdarg.h> // For va_list, va_start, va_end
+
+static FILE* g_sdl_psl1ght_log_file = NULL;
+static const char* g_sdl_psl1ght_log_path = "/dev_hdd0/game/SMAP02024/USRDIR/sdl_psl1ght_audio.log";
+
 #define SHW64(X) (u32)(((u64)X)>>32), (u32)(((u64)X)&0xFFFFFFFF)
 
+// Forward declaration for our logging function
+static void LogDePrintf(const char *format, ...);
+static void LogClose(void); // <-- ADD THIS LINE
+
+// Ensure AUDIO_DEBUG is defined to enable logging.
+// Comment this out to disable all deprintf logging.
 #define AUDIO_DEBUG
 
 #ifdef AUDIO_DEBUG
-#define deprintf(...) printf(__VA_ARGS__)
+#define deprintf(...) LogDePrintf(__VA_ARGS__)
 #else
-#define deprintf(...)
+#define deprintf(...) (void)0  // Cast to void to prevent unused variable warnings
 #endif
 
 static int
@@ -126,24 +138,20 @@ PSL1GHT_AUD_PlayDevice(_THIS)
 {
 	deprintf( "PSL1GHT_AUD_PlayDevice(%08X.%08X)\n", SHW64(this));
 	
-	/*
-	while( _config.readIndex == _last_filled_buf) // FIXME this is a mess to remove when queued event will me integrated
-	{
-		deprintf( "\tplaying too fast... waiting a ms\n");
-		//sleep(1);
-	}*/
-    /*TransferSoundData *sound = SDL_malloc(sizeof(TransferSoundData));
-    if (!sound) {
-        SDL_OutOfMemory();
-    }
+    // TransferSoundData *sound = SDL_malloc(sizeof(TransferSoundData));
+    // if (!sound) {
+    //     SDL_OutOfMemory();
+    // }
 
-    playGenericSound(this->hidden->mixbuf, this->hidden->mixlen);*/
+    // playGenericSound(this->hidden->mixbuf, this->hidden->mixlen);
 }
 
 
 static void
 PSL1GHT_AUD_CloseDevice(_THIS)
 {
+	LogClose(); // Call the new log closing function first
+
 	deprintf( "PSL1GHT_AUD_CloseDevice(%08X.%08X)\n", SHW64(this));
 	int ret = 0;
 	ret=audioPortStop(_portNum);
@@ -185,19 +193,72 @@ PSL1GHT_WaitDevice(_THIS)
 	//deprintf( "ALSA_WaitDevice(%08X.%08X)\n", SHW64(this));
 	
 	sys_event_t event;
-	//s32 ret = 
-	sysEventQueueReceive( _snd_queue, &event, 20 * 1000);
-	//deprintf( "sysEventQueueReceive: %08X\n", ret);
+	s32 ret;
+	deprintf("PSL1GHT_WaitDevice: Called at %u ms. Waiting for event with timeout %d us...\n", SDL_GetTicks(), 20 * 1000);
+	ret = sysEventQueueReceive( _snd_queue, &event, 20 * 1000);
+	deprintf("PSL1GHT_WaitDevice: sysEventQueueReceive returned %d at %u ms.\n", ret, SDL_GetTicks());
+	if (ret == 0) { // Assuming 0 is success for sysEventQueueReceive
+		deprintf("PSL1GHT_WaitDevice: Event received: source=0x%llx, data_1=0x%llx, data_2=0x%llx, data_3=0x%llx\n",
+				 event.source, event.data_1, event.data_2, event.data_3);
+	} else {
+		deprintf("PSL1GHT_WaitDevice: No event received or error occurred.\n");
+	}
 }
 
+static void LogInit() {
+    if (g_sdl_psl1ght_log_file == NULL) {
+        g_sdl_psl1ght_log_file = fopen(g_sdl_psl1ght_log_path, "a+"); // "a+" for append and read, creates if not exists
+        if (g_sdl_psl1ght_log_file != NULL) {
+            printf("PSL1GHT_AUD: Log file %s opened successfully for appending.\n", g_sdl_psl1ght_log_path);
+            fprintf(g_sdl_psl1ght_log_file, "--- LogInit: PSL1GHT SDL Audio Log Initialized ---\n");
+            fflush(g_sdl_psl1ght_log_file);
+        } else {
+            // Keep this printf for console feedback, as deprintf isn't set up yet
+            printf("PSL1GHT_AUD: ERROR: Failed to open log file %s. Check path and permissions.\n", g_sdl_psl1ght_log_path);
+        }
+    }
+    // Not logging if already open to keep console quiet during normal operation.
+    // If it's already open, we just continue using it.
+}
+
+static void LogDePrintf(const char *format, ...) {
+    va_list args_console;
+    va_list args_file;
+
+    // Print to console
+    va_start(args_console, format);
+    vprintf(format, args_console);
+    va_end(args_console);
+
+    // Print to log file
+    if (g_sdl_psl1ght_log_file != NULL) {
+        va_start(args_file, format);
+        vfprintf(g_sdl_psl1ght_log_file, format, args_file);
+        va_end(args_file);
+        fflush(g_sdl_psl1ght_log_file); // Ensure it's written out immediately
+    }
+}
+
+static void LogClose() {
+    if (g_sdl_psl1ght_log_file != NULL) {
+        fprintf(g_sdl_psl1ght_log_file, "--- LogClose: PSL1GHT SDL Audio Log Closed ---\n");
+        fflush(g_sdl_psl1ght_log_file); // Ensure final messages are written
+        fclose(g_sdl_psl1ght_log_file);
+        g_sdl_psl1ght_log_file = NULL;
+        // Optional: print to console that log was closed
+        printf("PSL1GHT_AUD: Log file %s closed.\n", g_sdl_psl1ght_log_path);
+    }
+}
 
 	static int
 PSL1GHT_AUD_Init(SDL_AudioDriverImpl * impl)
 {
+	LogInit(); // Call the new log initialization function
+
 	deprintf( "PSL1GHT_AUD_Init(%08X.%08X)\n", SHW64(impl));
 	/* Set the function pointers */
 	impl->OpenDevice = PSL1GHT_AUD_OpenDevice;
-	//impl->PlayDevice = PSL1GHT_AUD_PlayDevice;
+	impl->PlayDevice = PSL1GHT_AUD_PlayDevice;
     impl->WaitDevice = PSL1GHT_WaitDevice;
 	impl->CloseDevice = PSL1GHT_AUD_CloseDevice;
 	impl->GetDeviceBuf = PSL1GHT_AUD_GetDeviceBuf;
