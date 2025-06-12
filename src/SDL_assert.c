@@ -171,7 +171,7 @@ SDL_PromptAssertion(const SDL_assert_data *data, void *userdata)
         /* Uh oh, we're in real trouble now... */
         return SDL_ASSERTION_ABORT;
     }
-    SDL_snprintf(message, SDL_MAX_LOG_MESSAGE,
+/*     SDL_snprintf(message, SDL_MAX_LOG_MESSAGE, */
                  "Assertion failure at %s (%s:%d), triggered %u %s:" ENDLINE
                     "  '%s'",
                  data->function, data->filename, data->linenum,
@@ -270,7 +270,7 @@ SDL_PromptAssertion(const SDL_assert_data *data, void *userdata)
         /* this is a little hacky. */
         for ( ; ; ) {
             char buf[32];
-            fprintf(stderr, "Abort/Break/Retry/Ignore/AlwaysIgnore? [abriA] : ");
+/*             fprintf(stderr, "Abort/Break/Retry/Ignore/AlwaysIgnore? [abriA] : "); */
             fflush(stderr);
             if (fgets(buf, sizeof (buf), stdin) == NULL) {
                 break;

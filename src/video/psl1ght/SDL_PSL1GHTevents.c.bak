@@ -48,7 +48,7 @@ static void eventHandle(u64 status, u64 param, void * userdata) {
 
     // Process event
     if (status == SYSUTIL_EXIT_GAME) {
-// 	    deprintf(1, "Quit game requested\n");
+	    deprintf(1, "Quit game requested\n");
 	    SDL_SendQuit();
     } else if(status == SYSUTIL_MENU_OPEN) {
 	    // XMB opened
@@ -63,7 +63,7 @@ static void eventHandle(u64 status, u64 param, void * userdata) {
     } else if(status == SYSUTIL_DRAW_BEGIN) {
     } else if(status == SYSUTIL_DRAW_END) {
     } else {
-// 	    deprintf(1, "Unhandled event: %08llX\n", (unsigned long long int)status);
+	    deprintf(1, "Unhandled event: %08llX\n", (unsigned long long int)status);
     }
 }
 

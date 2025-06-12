@@ -32,7 +32,7 @@
 
 #include <io/pad.h>
 
-// #define pdprintf(x) printf(x)
+#define pdprintf(x) printf(x)
 
 #define NAMESIZE 10
 
@@ -62,23 +62,23 @@ SDL_SYS_JoystickInit(void)
 	int iReturn = 0;
     numberOfJoysticks = MAX_PADS;
 
-// 	pdprintf("SDL_SYS_JoystickInit\n");
+	pdprintf("SDL_SYS_JoystickInit\n");
 
 	SDL_zero( joy_data);
 
 	if( iReturn == 0)
 	{
 		iReturn =  ioPadInit( MAX_PADS) ;
-// 		pdprintf("\tPad initialized\n");
+		pdprintf("\tPad initialized\n");
 		if( iReturn != 0)
 		{
 			SDL_SetError("SDL_SYS_JoystickInit() : Couldn't initialize PS3 pads");
 		}
 	}
-	
+
 	SDL_SYS_JoystickDetect();
 
-	return numberOfJoysticks;	
+	return numberOfJoysticks;
 }
 
 int
@@ -93,7 +93,7 @@ SDL_SYS_JoystickDetect(void)
 	padInfo padinfo;
 
 	int iReturn = ioPadGetInfo(&padinfo);
-// 	pdprintf("\tGot info\n");
+	pdprintf("\tGot info\n");
 	if( iReturn != 0)
 	{
 		SDL_SetError("SDL_SYS_JoystickInit() : Couldn't get PS3 pads information ");
@@ -108,9 +108,9 @@ SDL_SYS_JoystickDetect(void)
 		{
 			if( padinfo.status[i])
 			{
-// 				sprintf( joy_data[i].name, "PAD%02X", i);
+				sprintf( joy_data[i].name, "PAD%02X", i);
 			}
-		} 
+		}
 	}
 }
 
@@ -136,7 +136,7 @@ SDL_SYS_JoystickGetDevicePlayerIndex(int device_index)
 void
 SDL_SYS_JoystickSetDevicePlayerIndex(int device_index, int player_index)
 {
-	
+
 }
 
 SDL_JoystickID
@@ -209,7 +209,7 @@ SDL_SYS_JoystickUpdate(SDL_Joystick * joystick)
 {
 	padData new_pad_data;
 	int joystickIndex = SDL_JoystickGetDeviceIndexFromInstanceID(joystick->instance_id);
-	
+
 	if (ioPadGetData(joystickIndex, &new_pad_data) != 0)
 	{
 		SDL_SetError("No joystick available with that index");
@@ -221,7 +221,7 @@ SDL_SYS_JoystickUpdate(SDL_Joystick * joystick)
 		CheckPSL1GHTAxis( ANA_L_V, 1);
 		CheckPSL1GHTAxis( ANA_R_H, 2);
 		CheckPSL1GHTAxis( ANA_R_V, 3);
-		
+
 		// Update buttons
 		CheckPSL1GHTButton( BTN_LEFT, 0);
 		CheckPSL1GHTButton( BTN_DOWN, 1);
