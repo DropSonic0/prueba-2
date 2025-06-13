@@ -32,7 +32,9 @@
 
 #include <io/pad.h>
 
-#define pdprintf(x) printf(x)
+#define PSL1GHT_MAX_CONTROLLERS 4
+
+// #define pdprintf(x) printf(x)
 
 #define NAMESIZE 10
 
@@ -46,7 +48,7 @@ struct joystick_hwdata
 	padData old_pad_data;
 };
 
-static SDL_PSL1GHT_JoyData joy_data[MAX_PADS];
+static SDL_PSL1GHT_JoyData joy_data[PSL1GHT_MAX_CONTROLLERS];
 int numberOfJoysticks = 0;
 
 void SDL_SYS_JoystickDetect(void);
@@ -60,16 +62,16 @@ int
 SDL_SYS_JoystickInit(void)
 {
 	int iReturn = 0;
-    numberOfJoysticks = MAX_PADS;
+    numberOfJoysticks = PSL1GHT_MAX_CONTROLLERS;
 
-	pdprintf("SDL_SYS_JoystickInit\n");
+// 	pdprintf("SDL_SYS_JoystickInit\n");
 
 	SDL_zero( joy_data);
 
 	if( iReturn == 0)
 	{
-		iReturn =  ioPadInit( MAX_PADS) ;
-		pdprintf("\tPad initialized\n");
+		iReturn =  ioPadInit( PSL1GHT_MAX_CONTROLLERS) ;
+// 		pdprintf("\tPad initialized\n");
 		if( iReturn != 0)
 		{
 			SDL_SetError("SDL_SYS_JoystickInit() : Couldn't initialize PS3 pads");
@@ -93,7 +95,7 @@ SDL_SYS_JoystickDetect(void)
 	padInfo padinfo;
 
 	int iReturn = ioPadGetInfo(&padinfo);
-	pdprintf("\tGot info\n");
+// 	pdprintf("\tGot info\n");
 	if( iReturn != 0)
 	{
 		SDL_SetError("SDL_SYS_JoystickInit() : Couldn't get PS3 pads information ");
@@ -102,13 +104,13 @@ SDL_SYS_JoystickDetect(void)
 	if( iReturn == 0)
 	{
 		unsigned int i;
-		numberOfJoysticks = padinfo.connected;
 
-		for(i = 0; i < padinfo.connected; i++)
+		for(i = 0; i < PSL1GHT_MAX_CONTROLLERS; i++)
 		{
-			if( padinfo.status[i])
+			joy_data[i].name[0] = '\0';
+			if( i < padinfo.connected && padinfo.status[i])
 			{
-				sprintf( joy_data[i].name, "PAD%02X", i);
+// 				sprintf( joy_data[i].name, "PAD%02X", i);
 			}
 		} 
 	}
